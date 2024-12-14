@@ -20,7 +20,6 @@ public class UserService_Tests
     }
 
     [Fact]
-
     public void CreateUser_ShouldReturnTrue_WhenSuccess() 
     {
 
@@ -38,15 +37,15 @@ public class UserService_Tests
     }
 
     [Fact]
-    public void UpdateUser_ShouldReturnTrue_WhenSuccess()
+    public void UpdateUser_ShouldReturnTrue_WhenUserExists()
     {
         // Arrange
         var userId = "existing-user-id";
         var updatedUser = new User { Id = userId, FirstName = "Updated User" };
         var users = new List<User>
-    {
-        new User { Id = userId, FirstName = "Test User" }
-    };
+        {
+            new User { Id = userId, FirstName = "Test User" }
+        };
 
         _fileRepositoryMock.Setup(fileRepository => fileRepository.GetDataFromFile<List<User>>()).Returns(users);
         _fileRepositoryMock.Setup(fileRepository => fileRepository.SaveDataToFile(It.IsAny<List<User>>())).Returns(true);
@@ -59,16 +58,36 @@ public class UserService_Tests
         _fileRepositoryMock.Verify(fileRepository => fileRepository.SaveDataToFile(It.Is<List<User>>(user => user[0].FirstName == "Updated User")), Times.Once);
     }
 
+    [Fact]
+    public void UpdateUser_ShouldReturnFalse_WhenUserDoesNotExist()
+    {
+        // Arrange
+        var userId = "non-existing-user-id";
+        var updatedUser = new User { Id = userId, FirstName = "Updated User" };
+        var users = new List<User>
+        {
+            new User { Id = "existing-user-id", FirstName = "Test User" }
+        };
+
+        _fileRepositoryMock.Setup(fileRepository => fileRepository.GetDataFromFile<List<User>>()).Returns(users);
+
+        // Act
+        var result = _userService.UpdateUser(updatedUser);
+
+        // Assert
+        Assert.False(result);
+        _fileRepositoryMock.Verify(fileRepository => fileRepository.SaveDataToFile(It.IsAny<List<User>>()), Times.Never);
+    }
 
     [Fact]
-    public void RemoveUser_ShouldReturnTrue_WhenSuccess()
+    public void RemoveUser_ShouldReturnTrue_WhenUserExists()
     {
         // Arrange
         var userId = "existing-user-id";
         var users = new List<User>
-    {
-        new User { Id = userId, FirstName = "Test User" }
-    };
+        {
+            new User { Id = userId, FirstName = "Test User" }
+        };
 
         _fileRepositoryMock.Setup(fileRepository => fileRepository.GetDataFromFile<List<User>>()).Returns(users);
         _fileRepositoryMock.Setup(fileRepository => fileRepository.SaveDataToFile(It.IsAny<List<User>>())).Returns(true);
@@ -79,5 +98,25 @@ public class UserService_Tests
         // Assert
         Assert.True(result);
         _fileRepositoryMock.Verify(fileRepository => fileRepository.SaveDataToFile(It.Is<List<User>>(u => u.Count == 0)), Times.Once);
+    }
+
+    [Fact]
+    public void RemoveUser_ShouldReturnFalse_WhenUserDoesNotExist()
+    {
+        // Arrange
+        var userId = "non-existing-user-id";
+        var users = new List<User>
+        {
+            new User { Id = "existing-user-id", FirstName = "Test User" }
+        };
+
+        _fileRepositoryMock.Setup(fileRepository => fileRepository.GetDataFromFile<List<User>>()).Returns(users);
+
+        // Act
+        var result = _userService.RemoveUser(userId);
+
+        // Assert
+        Assert.False(result);
+        _fileRepositoryMock.Verify(fileRepository => fileRepository.SaveDataToFile(It.IsAny<List<User>>()), Times.Never);
     }
 }
