@@ -24,7 +24,6 @@ public class FileService : IFileService
 
     public bool SaveContentToFile(string content)
     {
-
         try
         {
             if (!Directory.Exists(_directoryPath))
